@@ -12,7 +12,11 @@ export class Friend {
   @ManyToOne(() => User, user => user.friends)
   friend: User;
 
-  @Column({ type: 'enum', enum: ['pending', 'accepted', 'rejected'], default: 'pending' })
+  @Column({
+    type: 'enum',
+    enum: ['pending', 'accepted', 'rejected'],
+    default: 'pending',
+  })
   status: 'pending' | 'accepted' | 'rejected';
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })

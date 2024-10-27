@@ -1,5 +1,4 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { UserInfo } from './userInfo.entity';
 import { Post } from './post.entity';
 import { Friend } from './friend.entity';
 import { Comment } from './comment.entity';
@@ -30,8 +29,14 @@ export class User {
   @Column({ length: 258, nullable: true })
   interestedUser: string;
 
-  @OneToMany(() => UserInfo, userInfo => userInfo.user)
-  userInfo: UserInfo[];
+  @Column({ length: 1023, nullable: true })
+  bio: string;
+
+  @Column({ type: 'date', nullable: true })
+  date_of_birth: Date;
+
+  @Column({ length: 1023, nullable: true })
+  address: string;
 
   @OneToMany(() => Post, post => post.user)
   posts: Post[];

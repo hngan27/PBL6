@@ -24,19 +24,19 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
-    try {
-      if (!AppDataSource.isInitialized) {
-        await AppDataSource.initialize();
-      }
-
-      const token = await loginUser(username, password);
-      res.json({ token });
-    } catch (error) {
-      // Kiểm tra kiểu của error
-      if (error instanceof Error) {
-        res.status(401).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: 'Unknown error occurred' });
-      }
+  try {
+    if (!AppDataSource.isInitialized) {
+      await AppDataSource.initialize();
     }
+
+    const token = await loginUser(username, password);
+    res.json({ token });
+  } catch (error) {
+    // Kiểm tra kiểu của error
+    if (error instanceof Error) {
+      res.status(401).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'Unknown error occurred' });
+    }
+  }
 };

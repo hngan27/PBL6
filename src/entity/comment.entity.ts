@@ -23,7 +23,7 @@ export class Comment {
   @Column('text')
   content: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true }) 
+  @Column({ type: 'varchar', length: 255, nullable: true })
   image_url: string | null;
 
   @ManyToOne(() => Comment, comment => comment.replies, { nullable: true })

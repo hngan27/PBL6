@@ -62,9 +62,9 @@ export const loginUser = async (username: string, password: string) => {
   return {
     token,
     user: {
-        email: user.email,
-        avatar: user.avatar_url,
-        fullname:user.full_name
-    }
-}
+      email: user.email,
+      avatar: user.avatar_url,
+      fullname: user.full_name,
+    },
+  };
 };

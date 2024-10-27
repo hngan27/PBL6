@@ -1,85 +1,76 @@
-import { AppDataSource } from './config/data-source'; // Cấu hình data source
-import { Post } from './entity/post.entity';
-import { Like } from './entity/like.entity';
+// src/seed.ts
+import { AppDataSource } from './config/data-source';
 import { User } from './entity/user.entity';
+import { Post } from './entity/post.entity';
+import { Comment } from './entity/comment.entity';
+import { Like } from './entity/like.entity';
+import { AccessModifier } from './enums/accessModifier.enum';
 import { faker } from '@faker-js/faker';
+import bcrypt from 'bcrypt';
 
-// Hàm tạo dữ liệu giả cho các bài viết
-const createFakePosts = async (numberOfPosts: number) => {
-  const postRepository = AppDataSource.getRepository(Post);
-  const userRepository = AppDataSource.getRepository(User);
+const seedDatabase = async () => {
+  // Kết nối đến cơ sở dữ liệu
+  await AppDataSource.initialize();
 
-  // Lấy một số người dùng ngẫu nhiên
-  const users = await userRepository.find();
-  if (users.length === 0) {
-    throw new Error('No users found in the database.');
+  // Tạo dữ liệu giả cho User
+  const users: User[] = [];
+  for (let i = 0; i < 10; i++) {
+    const user = new User();
+    user.full_name = faker.person.fullName();
+    user.email = faker.internet.email();
+    const saltRounds = 10;
+    user.password = await bcrypt.hash('123456', saltRounds);
+    user.username = faker.internet.userName();
+    user.avatar_url = faker.image.avatar();
+    users.push(user);
   }
+  await AppDataSource.getRepository(User).save(users);
 
-  for (let i = 0; i < numberOfPosts; i++) {
-    const randomUser = users[Math.floor(Math.random() * users.length)];
+  // Tạo dữ liệu giả cho Post
 
+  const getRandomImageUrl = () => {
+    const randomNumber = Math.floor(Math.random() * 1000);
+    return `https://picsum.photos/640/480?random=${randomNumber}`;
+  };
+  const posts: Post[] = [];
+  for (let i = 0; i < 20; i++) {
     const post = new Post();
-    post.user = randomUser;
+    post.user = users[Math.floor(Math.random() * users.length)]; // Chọn ngẫu nhiên một user
     post.content = faker.lorem.paragraph();
-    post.access_modifier = faker.helpers.arrayElement([
-      'private',
-      'friend',
-      'public',
-    ]);
-    post.image_url = `https://picsum.photos/200/300?random=${Math.random()}`;
-    post.like_count = 55;
-    post.created_at = new Date();
-    post.updated_at = new Date();
-
-    await postRepository.save(post);
+    post.access_modifier = AccessModifier.Friend;
+    post.image_url = getRandomImageUrl();
+    posts.push(post);
   }
-};
+  await AppDataSource.getRepository(Post).save(posts);
 
-// Hàm tạo dữ liệu giả cho lượt thích
-const createFakeLikes = async (numberOfLikes: number) => {
-  const likeRepository = AppDataSource.getRepository(Like);
-  const postRepository = AppDataSource.getRepository(Post);
-  const userRepository = AppDataSource.getRepository(User);
-
-  // Lấy các bài viết và người dùng từ cơ sở dữ liệu
-  const posts = await postRepository.find();
-  const users = await userRepository.find();
-
-  if (posts.length === 0 || users.length === 0) {
-    throw new Error('No posts or users found in the database.');
+  // Tạo dữ liệu giả cho Comment
+  const comments: Comment[] = [];
+  for (let i = 0; i < 30; i++) {
+    const comment = new Comment();
+    comment.post = posts[Math.floor(Math.random() * posts.length)]; // Chọn ngẫu nhiên một post
+    comment.user = users[Math.floor(Math.random() * users.length)]; // Chọn ngẫu nhiên một user
+    comment.content = faker.lorem.sentence();
+    comments.push(comment);
   }
+  await AppDataSource.getRepository(Comment).save(comments);
 
-  for (let i = 0; i < numberOfLikes; i++) {
-    const randomPost = posts[Math.floor(Math.random() * posts.length)];
-    const randomUser = users[Math.floor(Math.random() * users.length)];
-
+  // Tạo dữ liệu giả cho Like
+  const likes: Like[] = [];
+  for (let i = 0; i < 50; i++) {
     const like = new Like();
-    like.post = randomPost;
-    like.user = randomUser;
-    like.created_at = new Date();
-
-    await likeRepository.save(like);
+    like.post = posts[Math.floor(Math.random() * posts.length)]; // Chọn ngẫu nhiên một post
+    like.user = users[Math.floor(Math.random() * users.length)]; // Chọn ngẫu nhiên một user
+    likes.push(like);
   }
+  await AppDataSource.getRepository(Like).save(likes);
+
+  console.log('Fake data has been seeded to the database.');
+
+  // Ngắt kết nối
+  await AppDataSource.destroy();
 };
 
-// Hàm chính để chạy tạo dữ liệu giả
-const main = async () => {
-  try {
-    await AppDataSource.initialize(); // Kết nối với cơ sở dữ liệu
-    console.log('Database connection established.');
-
-    // Tạo dữ liệu giả cho các bài viết và lượt thích
-    await createFakePosts(20); // Tạo 20 bài viết
-    console.log('Fake posts created.');
-
-    await createFakeLikes(50); // Tạo 50 lượt thích
-    console.log('Fake likes created.');
-
-    await AppDataSource.destroy(); // Đóng kết nối
-    console.log('Database connection closed.');
-  } catch (error) {
-    console.error('Error creating fake data:', error);
-  }
-};
-
-main();
+// Chạy hàm tạo dữ liệu giả
+seedDatabase().catch(error => {
+  console.error('Error seeding database:', error);
+});

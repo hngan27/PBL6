@@ -15,10 +15,12 @@
     "migrate:generate": "npm run typeorm -- migration:generate -d ./src/config/data-source.ts",
     "migrate:run": "npm run typeorm -- migration:run -d ./src/config/data-source.ts",
     "migrate:revert": "npm run typeorm -- migration:revert -d ./src/config/data-source.ts",
-    "migrate:show": "npm run typeorm -- migration:show -d ./src/config/data-source.ts"
+    "migrate:show": "npm run typeorm -- migration:show -d ./src/config/data-source.ts",
+    "seed:run": "ts-node src/seed.ts"
   },
   "dependencies": {
     "@faker-js/faker": "^9.0.3",
+    "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.1",
     "cookie-parser": "~1.4.6",
@@ -42,6 +44,7 @@
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
     "@eslint/js": "^9.7.0",
+    "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.7",
     "@types/debug": "^4.1.12",

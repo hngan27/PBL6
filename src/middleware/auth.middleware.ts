@@ -1,7 +1,7 @@
 // src/middleware/authMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import { User } from '../entity/user.entity'; 
+import { User } from '../entity/user.entity';
 
 const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) {
@@ -9,10 +9,14 @@ if (!jwtSecret) {
 }
 
 export interface AuthenticatedRequest extends Request {
-  user?: User; 
+  user?: User;
 }
 
-export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 

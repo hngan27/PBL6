@@ -42,18 +42,17 @@ export const toggleLikePost = async (postId: string, userId: string) => {
 
 // Hàm để lấy danh sách người dùng đã thích bài viết
 export const getUsersWhoLikedPost = async (postId: string) => {
-    const likeRepository = AppDataSource.getRepository(Like);
-  
-    // Tìm tất cả lượt thích cho bài viết cụ thể
-    const likes = await likeRepository.find({
-      where: { post: { post_id: postId } },
-      relations: ['user'], // Lấy thông tin người dùng đã thích
-    });
-  
-    return likes.map(like => ({
-      id: like.user.id,
-      username: like.user.username,
-      email: like.user.email,
-    }));
-  };
-  
+  const likeRepository = AppDataSource.getRepository(Like);
+
+  // Tìm tất cả lượt thích cho bài viết cụ thể
+  const likes = await likeRepository.find({
+    where: { post: { post_id: postId } },
+    relations: ['user'], // Lấy thông tin người dùng đã thích
+  });
+
+  return likes.map(like => ({
+    id: like.user.id,
+    username: like.user.username,
+    email: like.user.email,
+  }));
+};

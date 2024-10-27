@@ -89,7 +89,6 @@ export const editComment = async (req: Request, res: Response) => {
   }
 };
 
-
 // Xóa bình luận
 export const removeComment = async (req: Request, res: Response) => {
   const { commentId } = req.params;

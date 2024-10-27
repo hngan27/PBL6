@@ -30,7 +30,7 @@ export class Post {
   @Column({ default: 0 })
   comment_count: number;
 
-  @Column({ type: 'varchar', length: 255, nullable: true }) 
+  @Column({ type: 'varchar', length: 255, nullable: true })
   image_url: string | null;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })

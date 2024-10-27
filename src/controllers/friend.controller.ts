@@ -19,12 +19,10 @@ export const requestFriend = async (req: Request, res: Response) => {
     const friendRequest = await sendFriendRequest(userId, friendId);
     res.status(201).json(friendRequest);
   } catch (error) {
-    res
-      .status(400)
-      .json({
-        message:
-          error instanceof Error ? error.message : 'An unknown error occurred',
-      });
+    res.status(400).json({
+      message:
+        error instanceof Error ? error.message : 'An unknown error occurred',
+    });
   }
 };
 
@@ -35,12 +33,10 @@ export const acceptRequest = async (req: Request, res: Response) => {
     const acceptedRequest = await acceptFriendRequest(requestId);
     res.status(200).json(acceptedRequest);
   } catch (error) {
-    res
-      .status(400)
-      .json({
-        message:
-          error instanceof Error ? error.message : 'An unknown error occurred',
-      });
+    res.status(400).json({
+      message:
+        error instanceof Error ? error.message : 'An unknown error occurred',
+    });
   }
 };
 
@@ -55,12 +51,10 @@ export const listFriends = async (req: Request, res: Response) => {
     const friends = await getFriendsList(userId);
     res.status(200).json(friends);
   } catch (error) {
-    res
-      .status(400)
-      .json({
-        message:
-          error instanceof Error ? error.message : 'An unknown error occurred',
-      });
+    res.status(400).json({
+      message:
+        error instanceof Error ? error.message : 'An unknown error occurred',
+    });
   }
 };
 
@@ -71,19 +65,17 @@ export const rejectRequest = async (req: Request, res: Response) => {
     const rejectedRequest = await rejectFriendRequest(requestId);
     res.status(200).json(rejectedRequest);
   } catch (error) {
-    res
-      .status(400)
-      .json({
-        message:
-          error instanceof Error ? error.message : 'An unknown error occurred',
-      });
+    res.status(400).json({
+      message:
+        error instanceof Error ? error.message : 'An unknown error occurred',
+    });
   }
 };
 
 export const fetchIncomingRequests = async (req: Request, res: Response) => {
   const userId = req.user?.id; // Lấy userId từ request
   if (!userId) {
-    return res.status(400).json({ message: 'User ID is required' }); 
+    return res.status(400).json({ message: 'User ID is required' });
   }
   try {
     const requests = await getIncomingRequests(userId);
@@ -99,7 +91,7 @@ export const fetchIncomingRequests = async (req: Request, res: Response) => {
 export const fetchOutgoingRequests = async (req: Request, res: Response) => {
   const userId = req.user?.id; // Lấy userId từ request
   if (!userId) {
-    return res.status(400).json({ message: 'User ID is required' }); 
+    return res.status(400).json({ message: 'User ID is required' });
   }
   try {
     const requests = await getOutgoingRequests(userId);
