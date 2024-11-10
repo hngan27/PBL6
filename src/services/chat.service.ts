@@ -119,7 +119,7 @@ export const sendMessage = async (
   newMessage.sender = sender;
   newMessage.receiver = receiver;
   newMessage.content = content;
-  newMessage.timestamp = new Date().toISOString();
+  newMessage.timestamp = new Date();
   newMessage.imageUrl = imageUrl;
 
   const savedMessage =

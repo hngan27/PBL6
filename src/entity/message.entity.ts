@@ -1,3 +1,4 @@
+// src/entity/message.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -26,6 +27,6 @@ export class Message {
   @Column({ nullable: true })
   imageUrl: string;
 
-  @Column()
-  timestamp: string;
+  @Column({ type: 'timestamp' }) 
+  timestamp: Date; 
 }
