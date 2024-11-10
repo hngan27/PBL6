@@ -6,8 +6,7 @@ import {
   updateComment,
   deleteComment,
 } from '../services/comment.service';
-import fs from 'fs';
-import cloudinary from '../config/cloudinary.config';
+import uploadImageToCloudinary from '../utils/cloudinaryUpload';
 
 // Lấy danh sách bình luận theo bài viết
 export const getComments = async (req: Request, res: Response) => {
@@ -32,11 +31,8 @@ export const createComment = async (req: Request, res: Response) => {
 
     // Xử lý tải lên ảnh nếu có
     if (imageFile) {
-      const result = await cloudinary.v2.uploader.upload(imageFile.path, {
-        folder: 'avatars', // Thư mục trên Cloudinary
-      });
+      const result = await uploadImageToCloudinary(imageFile); // Sử dụng hàm upload ảnh
       image_url = result.secure_url; // Lưu URL của ảnh
-      fs.unlinkSync(imageFile.path); // Xóa file tạm sau khi upload thành công
     }
 
     // Thêm bình luận vào cơ sở dữ liệu
@@ -68,12 +64,8 @@ export const editComment = async (req: Request, res: Response) => {
     // Xử lý tải lên ảnh nếu có
     if (imageFile) {
       try {
-        const result = await cloudinary.v2.uploader.upload(imageFile.path, {
-          folder: 'avatars',
-        });
+        const result = await uploadImageToCloudinary(imageFile); // Sử dụng hàm upload ảnh
         image_url = result.secure_url; // Lưu URL của ảnh đã tải lên
-        // Xóa file tạm thời sau khi upload thành công
-        fs.unlinkSync(imageFile.path);
       } catch (uploadError) {
         console.error('Error uploading image:', uploadError);
         return res.status(500).json({ message: 'Error uploading image' });

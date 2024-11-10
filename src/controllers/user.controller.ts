@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import * as userService from '../services/user.service';
 import * as historyService from '../services/history.service';
-import cloudinary from 'cloudinary';
-import fs from 'fs';
+import uploadImageToCloudinary from '../utils/cloudinaryUpload';
 
 export const fetchAllUsers = async (req: Request, res: Response) => {
   try {
@@ -46,17 +45,17 @@ export const editProfile = async (req: Request, res: Response) => {
   let avatar_url: string | undefined;
 
   try {
-    // Nếu có ảnh avatar mới, tải lên Cloudinary
+    // Nếu có ảnh avatar mới, tải lên Cloudinary từ bộ nhớ
     if (avatarFile) {
-      const result = await cloudinary.v2.uploader.upload(avatarFile.path);
-      avatar_url = result.secure_url; // Lưu URL ảnh đã tải lên
-      fs.unlinkSync(avatarFile.path); // Xóa file ảnh cục bộ
+      const result = await uploadImageToCloudinary(avatarFile);
+      avatar_url = result.secure_url; // Lấy URL ảnh sau khi upload lên Cloudinary
+      console.log('Uploaded avatar URL:', avatar_url); // Kiểm tra URL ảnh đã upload
     }
 
     // Cập nhật thông tin người dùng
     const result = await userService.updateUserProfile(userId, {
       full_name,
-      avatar_url, // Chỉ lưu avatar_url nếu có
+      avatar_url, 
       bio,
       date_of_birth,
       address,
@@ -71,7 +70,6 @@ export const editProfile = async (req: Request, res: Response) => {
     }
   }
 };
-
 // Lưu lịch sử tìm kiếm
 export const searchUsers = async (req: Request, res: Response) => {
   const userId = req.user?.id; // Lấy userId từ token hoặc session

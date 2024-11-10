@@ -6,9 +6,8 @@ import {
   updatePost,
   deletePost,
 } from '../services/post.service';
-import fs from 'fs';
-import cloudinary from '../config/cloudinary.config';
 import { getUserById } from '../services/user.service';
+import uploadImageToCloudinary from '../utils/cloudinaryUpload';
 
 export const getAllPostsByUserId = async (req: Request, res: Response) => {
   const { userId } = req.params; // Lấy userId từ params
@@ -35,14 +34,14 @@ export const createPost = async (req: Request, res: Response) => {
     let image_url: string | null = null;
 
     if (imageFile) {
-      // Tải ảnh lên Cloudinary
-      const result = await cloudinary.v2.uploader.upload(imageFile.path);
-      image_url = result.secure_url;
-      fs.unlinkSync(imageFile.path);
+      // Tải ảnh trực tiếp từ bộ nhớ lên Cloudinary
+      const result = await uploadImageToCloudinary(imageFile); // Sử dụng hàm upload ảnh
+      image_url = result.secure_url; // Lấy URL của ảnh từ Cloudinary
     }
 
     const user = await getUserById(userId);
 
+    // Tạo bài viết
     const post = await addPost(userId, content, accessModifier, image_url);
     res.status(201).json({
       ...post,
@@ -63,11 +62,12 @@ export const editPost = async (req: Request, res: Response) => {
     let image_url: string | null = null;
 
     if (imageFile) {
-      const result = await cloudinary.v2.uploader.upload(imageFile.path);
-      image_url = result.secure_url;
-      fs.unlinkSync(imageFile.path);
+      // Tải ảnh trực tiếp từ bộ nhớ lên Cloudinary
+      const result = await uploadImageToCloudinary(imageFile); // Sử dụng hàm upload ảnh
+      image_url = result.secure_url; // Lấy URL của ảnh từ Cloudinary
     }
 
+    // Chỉnh sửa bài viết
     const updatedPost = await updatePost(
       postId,
       content,

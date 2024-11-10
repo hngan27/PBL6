@@ -5,8 +5,7 @@ import {
   sendMessage as sendMessageService,
 } from '../services/chat.service';
 import { io } from '../index';
-import fs from 'fs';
-import cloudinary from '../config/cloudinary.config';
+import uploadImageToCloudinary from '../utils/cloudinaryUpload';
 
 // API 1: Lấy tất cả các người đã nhắn tin cùng với tin nhắn cuối cùng
 export const getAllChats = async (
@@ -63,16 +62,13 @@ export const sendMessage = async (
     const { receiverId, content }: { receiverId: string; content: string } =
       req.body;
     const file = req.file;
-    // Kiểm tra file ảnh, nếu có, upload ảnh lên Cloudinary
+
     let imageUrl: string | null = null;
 
     // Xử lý tải lên ảnh nếu có
     if (file) {
-      const result = await cloudinary.v2.uploader.upload(file.path, {
-        folder: 'avatars', // Thư mục trên Cloudinary
-      });
-      imageUrl = result.secure_url; // Lưu URL của ảnh
-      fs.unlinkSync(file.path); // Xóa file tạm sau khi upload thành công
+      const result = await uploadImageToCloudinary(file); // Sử dụng hàm upload
+      imageUrl = result.secure_url; // Lấy URL của ảnh đã upload
     }
 
     // Kiểm tra xem senderId có hợp lệ không
