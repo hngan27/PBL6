@@ -13,7 +13,7 @@ const router = express.Router();
 router.post(
   '/:postId/comments',
   authenticateToken,
-  upload.single('avatar'),
+  upload.single('image'),
   createComment
 );
 router.get('/:postId/comments', authenticateToken, getComments);
@@ -21,7 +21,7 @@ router.delete('/comments/:commentId', authenticateToken, removeComment);
 router.put(
   '/comments/:commentId',
   authenticateToken,
-  upload.single('avatar'),
+  upload.single('image'),
   editComment
 );
 

@@ -46,7 +46,7 @@ export const createPost = async (req: Request, res: Response) => {
     const post = await addPost(userId, content, accessModifier, image_url);
     res.status(201).json({
       ...post,
-      user: { full_name: user.full_name, avatar_url: user.avatar_url }, 
+      user: { full_name: user.full_name, avatar_url: user.avatar_url },
     });
   } catch (error) {
     handleError(res, error);

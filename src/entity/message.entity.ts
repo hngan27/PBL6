@@ -1,20 +1,31 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from './user.entity';
 
 @Entity()
 export class Message {
-  @PrimaryGeneratedColumn('uuid')
-  message_id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @ManyToOne(() => User, user => user.sentMessages)
+  @ManyToOne(() => User, user => user.sentMessages) // Mối quan hệ với người gửi
+  @JoinColumn({ name: 'senderId' })
   sender: User;
 
-  @ManyToOne(() => User, user => user.receivedMessages)
+  @ManyToOne(() => User, user => user.receivedMessages) // Mối quan hệ với người nhận
+  @JoinColumn({ name: 'receiverId' })
   receiver: User;
 
   @Column('text')
   content: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
+  @Column({ nullable: true })
+  imageUrl: string;
+
+  @Column()
+  timestamp: string;
 }

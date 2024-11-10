@@ -50,9 +50,11 @@ export class User {
   @OneToMany(() => Like, like => like.user)
   likes: Like[];
 
+  // Mối quan hệ 1-n với Message (người gửi tin nhắn)
   @OneToMany(() => Message, message => message.sender)
   sentMessages: Message[];
 
+  // Mối quan hệ 1-n với Message (người nhận tin nhắn)
   @OneToMany(() => Message, message => message.receiver)
   receivedMessages: Message[];
 

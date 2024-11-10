@@ -35,19 +35,19 @@ export const registerUser = async (
   return user; // hoặc trả về một thông điệp thành công
 };
 
-export const loginUser = async (username: string, password: string) => {
+export const loginUser = async (email: string, password: string) => {
   const userRepository = AppDataSource.getRepository(User);
 
-  // Tìm người dùng theo username
-  const user = await userRepository.findOneBy({ username });
+  // Tìm người dùng theo email
+  const user = await userRepository.findOneBy({ email });
   if (!user) {
-    throw new Error('Invalid username or password');
+    throw new Error('Invalid email or password');
   }
 
   // Kiểm tra mật khẩu
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    throw new Error('Invalid username or password');
+    throw new Error('Invalid email or password');
   }
 
   // Tạo JWT token
@@ -56,15 +56,17 @@ export const loginUser = async (username: string, password: string) => {
     throw new Error('JWT_SECRET is not defined');
   }
 
-  const token = jwt.sign({ userId: user.id, username: user.username }, secret, {
+  const token = jwt.sign({ userId: user.id, email: user.email }, secret, {
     expiresIn: process.env.JWT_EXPIRE,
   });
   return {
     token,
     user: {
-        email: user.email,
-        avatar: user.avatar_url,
-        fullname:user.full_name
-    }
-}
+      id: user.id,
+      email: user.email,
+      avatar: user.avatar_url,
+      full_name: user.full_name,
+      username: user.username,
+    },
+  };
 };

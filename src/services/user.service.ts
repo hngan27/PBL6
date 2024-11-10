@@ -27,7 +27,16 @@ export const getUserProfile = async (userId: string) => {
   const user = await userRepository.findOne({
     where: { id: userId },
     relations: ['posts', 'friends'], // Lấy bài đăng và bạn bè
-    select: ['id', 'username', 'full_name', 'email', 'avatar_url', 'bio', 'date_of_birth', 'address'], // Chọn các trường cần thiết
+    select: [
+      'id',
+      'username',
+      'full_name',
+      'email',
+      'avatar_url',
+      'bio',
+      'date_of_birth',
+      'address',
+    ], // Chọn các trường cần thiết
   });
 
   if (!user) {
@@ -83,8 +92,17 @@ export const updateUserProfile = async (
 
 export const searchUsers = async (query: string) => {
   // Tìm kiếm người dùng theo username hoặc email
-  return await userRepository.createQueryBuilder('user')
-    .where('user.username LIKE :query OR user.email LIKE :query', { query: `%${query}%` })
-    .select(['user.id', 'user.username', 'user.full_name', 'user.email', 'user.avatar_url'])
+  return await userRepository
+    .createQueryBuilder('user')
+    .where('user.username LIKE :query OR user.email LIKE :query', {
+      query: `%${query}%`,
+    })
+    .select([
+      'user.id',
+      'user.username',
+      'user.full_name',
+      'user.email',
+      'user.avatar_url',
+    ])
     .getMany();
 };

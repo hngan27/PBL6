@@ -17,7 +17,8 @@ const seedDatabase = async () => {
   for (let i = 0; i < 10; i++) {
     const user = new User();
     user.full_name = faker.person.fullName();
-    user.email = faker.internet.email();
+    // user.email = faker.internet.email();
+    user.email = `user${i}@example.com`;
     const saltRounds = 10;
     user.password = await bcrypt.hash('123456', saltRounds);
     user.username = faker.internet.userName();

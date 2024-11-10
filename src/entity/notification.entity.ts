@@ -9,7 +9,10 @@ export class Notification {
   @ManyToOne(() => User, user => user.notifications)
   user: User;
 
-  @Column({ type: 'enum', enum: ['like', 'comment', 'friend_request', 'message'] })
+  @Column({
+    type: 'enum',
+    enum: ['like', 'comment', 'friend_request', 'message'],
+  })
   type: 'like' | 'comment' | 'friend_request' | 'message';
 
   @Column({ type: 'uuid' })

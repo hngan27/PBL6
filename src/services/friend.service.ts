@@ -59,7 +59,7 @@ export const getFriendsList = async (userId: string) => {
     friendAvatar: friend.friend.avatar_url,
   }));
 
-  return result; 
+  return result;
 };
 
 export const rejectFriendRequest = async (requestId: string) => {
@@ -81,23 +81,23 @@ export const getIncomingRequests = async (userId: string) => {
     where: { friend: { id: userId }, status: 'pending' },
     relations: ['user'],
     select: {
-      id: true, 
+      id: true,
       user: {
         id: true,
         full_name: true,
         avatar_url: true,
-      }
-    }
+      },
+    },
   });
 
   const result = incomingRequests.map(request => ({
-    requestId: request.id, 
-    senderId: request.user.id, 
+    requestId: request.id,
+    senderId: request.user.id,
     senderName: request.user.full_name,
-    senderAvatar: request.user.avatar_url
+    senderAvatar: request.user.avatar_url,
   }));
 
-  return result; 
+  return result;
 };
 
 // Lấy Yêu Cầu Kết Bạn Từ Người Dùng Hiện Tại
@@ -106,21 +106,21 @@ export const getOutgoingRequests = async (userId: string) => {
     where: { user: { id: userId }, status: 'pending' },
     relations: ['friend'],
     select: {
-      id: true, 
+      id: true,
       friend: {
-        id: true, 
+        id: true,
         full_name: true,
         avatar_url: true,
-      }
-    }
+      },
+    },
   });
 
   const result = outgoingRequests.map(request => ({
-    requestId: request.id, 
-    recipientId: request.friend.id, 
+    requestId: request.id,
+    recipientId: request.friend.id,
     recipientName: request.friend.full_name,
-    recipientAvatar: request.friend.avatar_url
+    recipientAvatar: request.friend.avatar_url,
   }));
 
-  return result; 
+  return result;
 };
