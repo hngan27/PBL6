@@ -78,13 +78,13 @@ export const getMessages = async (userId: string, receiverId: string) => {
   return messages.map(message => ({
     sender: {
       id: sender.id,
-      name: sender.full_name, // Tên người gửi
-      avatar: sender.avatar_url, // Ảnh đại diện người gửi
+      full_name: sender.full_name, // Tên người gửi
+      avatar_url: sender.avatar_url, // Ảnh đại diện người gửi
     },
     receiver: {
       id: receiver.id,
-      name: receiver.full_name,
-      avatar: receiver.avatar_url, // Ảnh đại diện người nhận
+      full_name: receiver.full_name,
+      avatar_url: receiver.avatar_url, // Ảnh đại diện người nhận
     },
     content: message.content,
     imageUrl: message.imageUrl,
