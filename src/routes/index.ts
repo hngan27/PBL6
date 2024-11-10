@@ -6,6 +6,7 @@ import commentRoute from './comment.route';
 import postRoute from './post.route';
 import userRoute from './user.route';
 import chatRoute from './chat.route';
+import feedRoute from './feed.route';
 
 const routerAPI: Router = Router();
 
@@ -16,5 +17,6 @@ routerAPI.use('/posts', commentRoute);
 routerAPI.use('/', postRoute);
 routerAPI.use('/', userRoute);
 routerAPI.use('/chat', chatRoute);
+routerAPI.use('/', feedRoute);
 
 export default routerAPI;
