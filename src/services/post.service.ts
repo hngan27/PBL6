@@ -10,12 +10,73 @@ const postRepository = AppDataSource.getRepository(Post);
 const userRepository = AppDataSource.getRepository(User);
 
 export const getPostsByUserId = async (userId: string) => {
-  // Lấy tất cả bài viết của người dùng theo userId
-  return await postRepository.find({
-    where: { user: { id: userId } }, // Đảm bảo ánh xạ đúng với User
-    relations: ['user', 'comments', 'likes'], // Liên kết với các thực thể khác nếu cần
-    order: { created_at: 'DESC' }, // Sắp xếp theo thời gian tạo giảm dần
-  });
+  const posts = await AppDataSource.getRepository(Post)
+    .createQueryBuilder('post')
+    .leftJoinAndSelect('post.user', 'user')
+    .leftJoinAndSelect('post.comments', 'comments') // Lấy liên kết với comments
+    .leftJoinAndSelect('comments.user', 'commentUser') // Lấy user của comment
+    .leftJoinAndSelect('post.likes', 'likes') // Lấy liên kết với likes
+    .leftJoinAndSelect('likes.user', 'likeUser') // Lấy user của like
+    .where('post.user.id = :userId', { userId })
+    .orderBy('post.created_at', 'DESC')
+    .getMany();
+
+  const formattedPosts = posts.map(post => ({
+    post_id: post.post_id,
+    content: post.content,
+    access_modifier: post.access_modifier,
+    like_count: post.like_count,
+    comment_count: post.comment_count,
+    image_url: post.image_url,
+    created_at: post.created_at,
+    updated_at: post.updated_at,
+    user: {
+      id: post.user.id,
+      username: post.user.username,
+      password: post.user.password,
+      full_name: post.user.full_name,
+      email: post.user.email,
+      avatar_url: post.user.avatar_url,
+      interestedUser: post.user.interestedUser,
+      bio: post.user.bio,
+      date_of_birth: post.user.date_of_birth,
+      address: post.user.address,
+    },
+    comments: post.comments?.map(comment => ({
+      comment_id: comment.comment_id,
+      content: comment.content,
+      image_url: comment.image_url,
+      created_at: comment.created_at,
+      user: {
+        id: comment.user?.id,
+        username: comment.user?.username,
+        full_name: comment.user?.full_name,
+        avatar_url: comment.user?.avatar_url,
+      },
+      replies: comment.replies?.map(reply => ({
+        comment_id: reply.comment_id,
+        content: reply.content,
+        created_at: reply.created_at,
+        user: {
+          id: reply.user?.id,
+          username: reply.user?.username,
+          full_name: comment.user?.full_name,
+          avatar_url: reply.user?.avatar_url,
+        },
+      })) || []
+    })) || [],
+    likes: post.likes?.map(like => ({
+      like_id: like.like_id,
+      user: {
+        id: like.user?.id,
+        full_name: like.user?.full_name,
+        username: like.user?.username,
+        avatar_url: like.user?.avatar_url,
+      },
+    })) || []
+  }));
+
+  return { posts: formattedPosts };
 };
 
 export const addPost = async (
