@@ -36,7 +36,7 @@ export const getAllChats = async (userId: string) => {
               ? 'Bạn đã gửi một hình ảnh!'
               : `${message.sender.full_name} đã gửi một hình ảnh cho bạn`
             : message.content,
-        timestamp: format(new Date(message.timestamp), 'dd-MM-yyyy HH:mm:ss'),
+        timestamp: message.timestamp,
       };
     }
     return acc;
@@ -80,7 +80,7 @@ export const getMessages = async (userId: string, receiverId: string) => {
         .filter(message => message.sender.id === userId)
         .map(message => ({
           content: message.content,
-          timestamp: format(new Date(message.timestamp), 'dd-MM-yyyy HH:mm:ss'), // Định dạng thời gian
+          timestamp: message.timestamp, // Định dạng thời gian
           sender: 'user', // Đánh dấu người gửi là 'user'
           imageUrl: message.imageUrl || '', // Nếu không có ảnh thì để trống
         })),
@@ -93,7 +93,7 @@ export const getMessages = async (userId: string, receiverId: string) => {
         .filter(message => message.sender.id === receiverId)
         .map(message => ({
           content: message.content,
-          timestamp: format(new Date(message.timestamp), 'dd-MM-yyyy HH:mm:ss'), // Định dạng thời gian
+          timestamp: message.timestamp, // Định dạng thời gian
           sender: 'opponent', // Đánh dấu người gửi là 'opponent'
           imageUrl: message.imageUrl || '', // Nếu không có ảnh thì để trống
         })),
