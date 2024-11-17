@@ -75,6 +75,7 @@ export const getMessages = async (userId: string, receiverId: string) => {
     right: {
       id: sender.id,
       name: sender.full_name,
+      avatar: sender.avatar_url,
       messages: messages
         .filter(message => message.sender.id === userId)
         .map(message => ({
@@ -87,6 +88,7 @@ export const getMessages = async (userId: string, receiverId: string) => {
     left: {
       id: receiver.id,
       name: receiver.full_name,
+      avatar: receiver.avatar_url,
       messages: messages
         .filter(message => message.sender.id === receiverId)
         .map(message => ({
