@@ -107,3 +107,23 @@ export const fetchSearchHistory = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error fetching search history', error });
   }
 };
+
+export const getProfile = async (req: Request, res: Response) => {
+  const currentUserId = req.user?.id; 
+  const { targetUserId } = req.params;
+
+  if (!currentUserId) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    const profile = await userService.getProfileWithDetails(currentUserId, targetUserId);
+    res.status(200).json(profile);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(404).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};

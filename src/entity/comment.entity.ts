@@ -14,7 +14,7 @@ export class Comment {
   @PrimaryGeneratedColumn('uuid')
   comment_id: string;
 
-  @ManyToOne(() => Post, post => post.comments)
+  @ManyToOne(() => Post, post => post.comments, { onDelete: 'CASCADE' })
   post: Post;
 
   @ManyToOne(() => User, user => user.comments)
@@ -26,7 +26,7 @@ export class Comment {
   @Column({ type: 'varchar', length: 255, nullable: true })
   image_url: string | null;
 
-  @ManyToOne(() => Comment, comment => comment.replies, { nullable: true })
+  @ManyToOne(() => Comment, comment => comment.replies, { nullable: true, onDelete: 'CASCADE' })
   parent_comment: Comment | null;
 
   @OneToMany(() => Comment, comment => comment.parent_comment)

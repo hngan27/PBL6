@@ -26,8 +26,20 @@ export const getUserFeed = async (userId: string) => {
     return [];
   }
 
+  // Truy vấn các bài viết của chính người dùng
+  const userPosts = await AppDataSource.getRepository(Post)
+    .createQueryBuilder('post')
+    .leftJoinAndSelect('post.user', 'user') // Lấy thông tin người đăng bài
+    .leftJoinAndSelect('post.comments', 'comments') // Lấy liên kết với comments
+    .leftJoinAndSelect('comments.user', 'commentUser') // Lấy user của comment
+    .leftJoinAndSelect('post.likes', 'likes') // Lấy liên kết với likes
+    .leftJoinAndSelect('likes.user', 'likeUser') // Lấy user của like
+    .where('post.userId = :userId', { userId }) // Lọc các bài viết của chính người dùng
+    .orderBy('post.created_at', 'DESC') // Sắp xếp theo thời gian giảm dần
+    .getMany();
+
   // Truy vấn các bài viết của bạn bè và các bài viết public của người dùng khác
-  const posts = await AppDataSource.getRepository(Post)
+  const friendPosts = await AppDataSource.getRepository(Post)
     .createQueryBuilder('post')
     .leftJoinAndSelect('post.user', 'user') // Lấy thông tin người đăng bài
     .leftJoinAndSelect('post.comments', 'comments') // Lấy liên kết với comments
@@ -45,7 +57,10 @@ export const getUserFeed = async (userId: string) => {
     .orderBy('post.created_at', 'DESC') // Sắp xếp theo thời gian giảm dần
     .getMany();
 
-  const formattedPosts = posts.map(post => ({
+  // Kết hợp các bài viết của người dùng và bạn bè
+  const allPosts = [...userPosts, ...friendPosts];
+
+  const formattedPosts = allPosts.map(post => ({
     post_id: post.post_id,
     content: post.content,
     access_modifier: post.access_modifier,

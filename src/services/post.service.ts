@@ -109,11 +109,16 @@ export const updatePost = async (
   imageUrl: string | null
 ) => {
   const post = await postRepository.findOneBy({ post_id: postId });
+
   if (!post) throw new Error('Post not found');
 
   post.content = content;
   post.access_modifier = accessModifier;
-  post.image_url = imageUrl;
+
+  // Kiểm tra nếu có thay đổi ảnh, nếu không giữ ảnh cũ
+  if (imageUrl !== null) {
+    post.image_url = imageUrl;
+  }
 
   return await postRepository.save(post);
 };
@@ -124,8 +129,10 @@ export const deletePost = async (postId: string) => {
 
   // Kiểm tra xem có bài viết nào bị xóa không
   if (result.affected === 0) {
-    throw new Error('No post found to delete'); // Hoặc xử lý theo cách khác
+    throw new Error('No post found to delete');
   }
 
-  return { message: 'Post deleted successfully' };
+  // Có thể thêm thông báo cho việc xóa bình luận và like liên quan
+  return { message: 'Post and related comments and likes deleted successfully' };
 };
+

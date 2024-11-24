@@ -38,26 +38,30 @@ export const acceptFriendRequest = async (requestId: string) => {
 };
 
 export const getFriendsList = async (userId: string) => {
-  const friends = await friendRepository.find({
-    where: [
-      { user: { id: userId }, status: 'accepted' },
-      { friend: { id: userId }, status: 'accepted' },
-    ],
-    relations: ['friend'],
-    select: {
-      friend: {
-        id: true,
-        full_name: true,
-        avatar_url: true,
-      },
-    },
-  });
+  const friends = await AppDataSource.getRepository(Friend)
+    .createQueryBuilder('friend')
+    .leftJoinAndSelect('friend.user', 'user') // Join với bảng user của người dùng
+    .leftJoinAndSelect('friend.friend', 'friendUser') // Join với bảng user của bạn bè
+    .where('(friend.user.id = :userId OR friend.friend.id = :userId)', { userId })
+    .andWhere('friend.status = :accepted', { accepted: 'accepted' })
+    .getMany();
 
-  const result = friends.map(friend => ({
-    friendId: friend.friend.id,
-    friendName: friend.friend.full_name,
-    friendAvatar: friend.friend.avatar_url,
-  }));
+  const result = friends.map(friend => {
+    // Kiểm tra nếu người dùng là người yêu cầu kết bạn (user) hay là người bạn (friend)
+    const friendData = friend.user.id === userId ? friend.friend : friend.user;
+    
+    return {
+      id: friendData.id,
+      full_name: friendData.full_name,
+      username: friendData.username,
+      email: friendData.email,
+      avatar_url: friendData.avatar_url,
+      bio: friendData.bio,
+      date_of_birth: friendData.date_of_birth,
+      address: friendData.address,
+      interestedUser: friendData.interestedUser,
+    };
+  });
 
   return result;
 };
@@ -123,4 +127,100 @@ export const getOutgoingRequests = async (userId: string) => {
   }));
 
   return result;
+};
+
+export const cancelFriendRequest = async (userId: string, friendId: string) => {
+  // Kiểm tra lời mời kết bạn mà người dùng hiện tại đã gửi đi
+  const sentRequest = await friendRepository.findOne({
+    where: {
+      user: { id: userId },
+      friend: { id: friendId },
+      status: 'pending',
+    },
+  });
+
+  if (!sentRequest) {
+    throw new Error('Friend request not found or cannot be canceled');
+  }
+
+  // Xóa lời mời kết bạn
+  await friendRepository.remove(sentRequest);
+
+  return { message: 'Friend request canceled successfully' };
+};
+
+export const findPossibleFriends = async (currentUserId: string) => {
+  // Lấy danh sách bạn của người dùng hiện tại
+  // Lấy danh sách bạn của người dùng hiện tại
+  const currentUserFriends = await AppDataSource.getRepository(Friend)
+    .createQueryBuilder('friend')
+    .leftJoinAndSelect('friend.user', 'user') // Joins the user table
+    .leftJoinAndSelect('friend.friend', 'friendUser') // Joins the friend table
+    .where('friend.user.id = :userId OR friend.friend.id = :userId', {
+      userId: currentUserId,
+    })
+    .getMany();
+
+  // Lấy danh sách bạn tiềm năng (không phải là bạn hiện tại)
+  const potentialFriends = await AppDataSource.getRepository(User)
+    .createQueryBuilder('user')
+    .where('user.id != :currentUserId', { currentUserId })
+    .getMany();
+
+  // Loại bỏ những người đã là bạn bè
+  const filteredPotentialFriends = potentialFriends.filter(
+    potentialFriend =>
+      !currentUserFriends.some(
+        friend =>
+          friend.friend?.id === potentialFriend.id ||
+          friend.user?.id === potentialFriend.id
+      )
+  );
+
+  // Tính số lượng bạn chung cho từng người bạn tiềm năng
+  const userPotentialFriendsWithCommonCount = await Promise.all(
+    filteredPotentialFriends.map(async potentialFriend => {
+      // Lấy danh sách bạn của người bạn tiềm năng
+      const potentialFriendFriends = await AppDataSource.getRepository(Friend)
+        .createQueryBuilder('friend')
+        .leftJoinAndSelect('friend.user', 'user')
+        .leftJoinAndSelect('friend.friend', 'friendUser')
+        .where('friend.user.id = :userId OR friend.friend.id = :userId', {
+          userId: potentialFriend.id,
+        })
+        .getMany();
+
+      // Tính số lượng bạn chung
+      const commonFriends = currentUserFriends.filter(friend =>
+        potentialFriendFriends.some(
+          pf =>
+            pf.user?.id === friend.friend?.id ||
+            pf.friend?.id === friend.friend?.id // Kiểm tra sự tồn tại trước khi truy cập `id`
+        )
+      );
+
+      return {
+        potentialFriend,
+        commonFriendsCount: commonFriends.length,
+      };
+    })
+  );
+
+  // Loại bỏ những người không có bạn chung
+  const filteredWithCommonFriends = userPotentialFriendsWithCommonCount.filter(
+    friendWithCommonCount => friendWithCommonCount.commonFriendsCount > 0
+  );
+
+  // Sắp xếp danh sách bạn tiềm năng theo số lượng bạn chung từ cao đến thấp
+  filteredWithCommonFriends.sort(
+    (a, b) => b.commonFriendsCount - a.commonFriendsCount
+  );
+
+  // Giới hạn kết quả lấy 30 người bạn tiềm năng có số lượng bạn chung nhiều nhất
+  const topPotentialFriends = filteredWithCommonFriends.slice(0, 30);
+
+  // In ra kết quả
+  console.log(topPotentialFriends);
+
+  return topPotentialFriends;
 };
