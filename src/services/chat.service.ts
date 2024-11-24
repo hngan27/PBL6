@@ -83,6 +83,7 @@ export const getMessages = async (userId: string, receiverId: string) => {
           timestamp: message.timestamp, // Định dạng thời gian
           sender: 'user', // Đánh dấu người gửi là 'user'
           imageUrl: message.imageUrl || '', // Nếu không có ảnh thì để trống
+          avatar: sender.avatar_url,
         })),
     },
     left: {
@@ -96,6 +97,7 @@ export const getMessages = async (userId: string, receiverId: string) => {
           timestamp: message.timestamp, // Định dạng thời gian
           sender: 'opponent', // Đánh dấu người gửi là 'opponent'
           imageUrl: message.imageUrl || '', // Nếu không có ảnh thì để trống
+          avatar: receiver.avatar_url,
         })),
     },
   };

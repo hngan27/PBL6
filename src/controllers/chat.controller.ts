@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
+import { getReceiverSocketId, io } from "../config/socket";
 import {
   getAllChats as getAllChatsService,
   getMessages as getMessagesService,
   sendMessage as sendMessageService,
 } from '../services/chat.service';
-import { io } from '../index';
+// import { io } from '../config/socket'
 import uploadImageToCloudinary from '../utils/cloudinaryUpload';
 
 // API 1: Lấy tất cả các người đã nhắn tin cùng với tin nhắn cuối cùng
@@ -58,7 +59,7 @@ export const sendMessage = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const senderId = req.user?.id; // Lấy senderId từ thông tin người dùng trong req.user
+    const senderId = req.user?.id;
     const { receiverId, content }: { receiverId: string; content: string } =
       req.body;
     const file = req.file;
@@ -67,8 +68,8 @@ export const sendMessage = async (
 
     // Xử lý tải lên ảnh nếu có
     if (file) {
-      const result = await uploadImageToCloudinary(file); // Sử dụng hàm upload
-      imageUrl = result.secure_url; // Lấy URL của ảnh đã upload
+      const result = await uploadImageToCloudinary(file);
+      imageUrl = result.secure_url;
     }
 
     // Kiểm tra xem senderId có hợp lệ không
@@ -93,12 +94,17 @@ export const sendMessage = async (
       imageUrl ?? ''
     );
 
+
+
     console.log(
       `Message sent from ${senderId} to ${receiverId}: ${content} and ${imageUrl}`
     );
-    // Phát tin nhắn mới cho cả người gửi và người nhận qua socket
-    io.to(receiverId).emit('newMessage', savedMessage);
-    io.to(senderId).emit('newMessage', savedMessage);
+
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", savedMessage);
+    }
+
 
     // Trả về tin nhắn đã gửi
     return res.status(201).json({
