@@ -15,4 +15,7 @@ export const AppDataSource = new DataSource({
   entities: [join(__dirname, '../entity/*.entity.{ts, js}')],
   migrations: [join(__dirname, '../migration/*.{ts, js}')],
   subscribers: [join(__dirname, '../subscriber/*.{ts, js}')],
+  extra: {
+    connectionLimit: 3,
+  },
 });

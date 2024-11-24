@@ -30,6 +30,12 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const token = await loginUser(email, password);
+    res.cookie("jwt", token.token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000, // MS
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV !== "development",
+    });
     res.json({ token });
   } catch (error) {
     // Kiểm tra kiểu của error
@@ -40,3 +46,13 @@ export const login = async (req: Request, res: Response) => {
     }
   }
 };
+
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    res.cookie("jwt", "", { maxAge: 0 });
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}
