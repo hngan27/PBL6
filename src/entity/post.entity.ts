@@ -43,9 +43,9 @@ export class Post {
   })
   updated_at: Date;
 
-  @OneToMany(() => Comment, comment => comment.post)
+  @OneToMany(() => Comment, comment => comment.post, { onDelete: 'CASCADE' })
   comments: Comment[];
 
-  @OneToMany(() => Like, like => like.post)
+  @OneToMany(() => Like, like => like.post, { onDelete: 'CASCADE' })
   likes: Like[];
 }

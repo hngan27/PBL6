@@ -2,8 +2,12 @@ import { AppDataSource } from '../config/data-source';
 import { User } from '../entity/user.entity';
 import { Post } from '../entity/post.entity';
 import { Friend } from '../entity/friend.entity';
+import { AccessModifier } from '../enums/accessModifier.enum';
+import { In } from 'typeorm';
 
 const userRepository = AppDataSource.getRepository(User);
+const friendRepository = AppDataSource.getRepository(Friend);
+const postRepository = AppDataSource.getRepository(Post);
 
 export const getUserById = async (userId: string) => {
   const user = await userRepository.findOne({
@@ -105,4 +109,88 @@ export const searchUsers = async (query: string) => {
       'user.avatar_url',
     ])
     .getMany();
+};
+
+export const getProfileWithDetails = async (
+  currentUserId: string,
+  targetUserId: string
+) => {
+  // Lấy thông tin người dùng
+  const targetUser = await userRepository.findOne({
+    where: { id: targetUserId },
+    select: [
+      'id',
+      'full_name',
+      'username',
+      'email',
+      'avatar_url',
+      'bio',
+      'date_of_birth',
+      'address',
+    ],
+  });
+
+  if (!targetUser) {
+    throw new Error('User not found');
+  }
+
+  // Kiểm tra nếu là chính mình
+  const isSelf = currentUserId === targetUserId;
+
+  // Tạo điều kiện `access_modifier` cho bài viết
+  let accessModifiers: AccessModifier[] = [AccessModifier.Public];
+  if (isSelf) {
+    // Nếu là chính mình, lấy tất cả bài viết (bao gồm Public, Friend, Private)
+    accessModifiers = [
+      AccessModifier.Public,
+      AccessModifier.Friend,
+      AccessModifier.Private,
+    ];
+  } else {
+    // Kiểm tra mối quan hệ bạn bè
+    const isFriend = await friendRepository.findOne({
+      where: [
+        {
+          user: { id: currentUserId },
+          friend: { id: targetUserId },
+          status: 'accepted',
+        },
+        {
+          user: { id: targetUserId },
+          friend: { id: currentUserId },
+          status: 'accepted',
+        },
+      ],
+    });
+
+    if (isFriend) {
+      // Nếu là bạn bè, lấy bài viết Public và Friend
+      accessModifiers.push(AccessModifier.Friend);
+    }
+  }
+
+  // Lấy bài viết với điều kiện đã xác định
+  const posts = await postRepository.find({
+    where: {
+      user: { id: targetUserId },
+      access_modifier: In(accessModifiers), // Sử dụng In để kiểm tra nhiều access_modifier
+    },
+    relations: ['user'], // Liên kết với thông tin người dùng
+    order: { created_at: 'DESC' }, // Sắp xếp theo thời gian
+  });
+
+  const friendCount = await friendRepository.count({
+    where: [
+      { user: { id: targetUserId }, status: 'accepted' },
+      { friend: { id: targetUserId }, status: 'accepted' },
+    ],
+  });
+
+  return {
+    user: {
+      ...targetUser,
+      friendCount,
+    },
+    posts,
+  };
 };

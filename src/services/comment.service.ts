@@ -99,7 +99,12 @@ export const updateComment = async (
 
   // Cập nhật nội dung bình luận
   comment.content = content;
-  comment.image_url = image_url;
+
+  // Kiểm tra xem có cập nhật ảnh không, nếu không thì giữ lại ảnh cũ
+  if (image_url !== null) {
+    comment.image_url = image_url;
+  }
+
   comment.updated_at = new Date();
 
   await commentRepository.save(comment);

@@ -7,6 +7,7 @@ const router = Router();
 
 router.get('/users', userController.fetchAllUsers);
 router.get('/user/profile', authenticateToken, userController.fetchUserProfile);
+router.get('/user/:targetUserId/profile', authenticateToken, userController.getProfile);
 router.put(
   '/user/profile',
   authenticateToken,

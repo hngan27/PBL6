@@ -6,6 +6,8 @@ import {
   rejectFriendRequest,
   getIncomingRequests,
   getOutgoingRequests,
+  cancelFriendRequest,
+  findPossibleFriends
 } from '../services/friend.service';
 
 export const requestFriend = async (req: Request, res: Response) => {
@@ -101,4 +103,40 @@ export const fetchOutgoingRequests = async (req: Request, res: Response) => {
       (error as Error).message || 'An unknown error occurred';
     res.status(500).json({ message: errorMessage });
   }
+};
+
+export const cancelFriendRequestController = async (req: Request, res: Response) => {
+  const userId = req.user?.id; 
+  const { friendId } = req.params; 
+
+  if (!userId) {
+    return res.status(401).json({ message: 'Unauthorized: No user found' });
+  }
+
+  try {
+    const result = await cancelFriendRequest(userId, friendId);
+    res.status(200).json(result);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
+
+export const getPossibleFriendsController = async (req: Request, res: Response) => {
+  const currentUserId = req.user?.id;
+
+  // Kiểm tra nếu currentUserId tồn tại và là chuỗi
+  if (typeof currentUserId === 'string') {
+    try {
+      const possibleFriends = await findPossibleFriends(currentUserId);
+      return res.status(200).json(possibleFriends);
+    } catch (error) {
+      return res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
+    }
+  }
+
+  return res.status(401).json({ message: 'Unauthorized' });
 };

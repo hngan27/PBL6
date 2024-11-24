@@ -28,4 +28,16 @@ router.get(
   friendController.fetchOutgoingRequests
 ); // Trả về danh sách yêu cầu từ người dùng hiện tại
 
+router.delete(
+  '/cancel/:friendId',
+  authenticateToken,
+  friendController.cancelFriendRequestController
+);
+
+router.get(
+  '/possible-friends',
+  authenticateToken,
+  friendController.getPossibleFriendsController
+); // trả về danh sách gợi ý kết bạn
+
 export default router;
