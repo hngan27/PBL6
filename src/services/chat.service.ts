@@ -110,7 +110,7 @@ export const sendMessage = async (
   senderId: string, // Tham số senderId
   receiverId: string, // Tham số receiverId
   content: string, // Tham số content
-  imageUrl: string
+  imageUrl: string,
 ): Promise<Message> => {
   // Kiểm tra tham số
   if (typeof senderId !== 'string' || typeof receiverId !== 'string') {
@@ -138,4 +138,28 @@ export const sendMessage = async (
   const savedMessage =
     await AppDataSource.getRepository(Message).save(newMessage);
   return savedMessage;
+};
+
+
+// API 4: Xóa tất cả tin nhắn giữa người dùng và người nhận
+export const deleteAllMessagesService = async (
+  userId: string,
+  receiverId: string
+): Promise<any> => {
+  // Kiểm tra tham số đầu vào
+  if (!userId || !receiverId) {
+    throw new Error('User ID and Receiver ID are required');
+  }
+
+  // Thực hiện xóa tất cả tin nhắn giữa hai người dùng
+  const deleteResult = await AppDataSource.getRepository(Message)
+    .createQueryBuilder()
+    .delete()
+    .where(
+      '(senderId = :userId AND receiverId = :receiverId) OR (senderId = :receiverId AND receiverId = :userId)',
+      { userId, receiverId }
+    )
+    .execute();
+
+  return deleteResult;
 };

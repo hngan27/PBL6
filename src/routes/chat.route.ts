@@ -23,4 +23,10 @@ router.post(
   chatController.sendMessage
 );
 
+router.delete(
+  '/messages/:receiverId',
+  authenticateToken,
+  chatController.deleteAllMessages
+);
+
 export default router;
