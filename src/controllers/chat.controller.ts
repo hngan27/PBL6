@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { getReceiverSocketId, io } from "../config/socket";
 import {
+  deleteAllMessagesService,
   getAllChats as getAllChatsService,
   getMessages as getMessagesService,
   sendMessage as sendMessageService,
@@ -91,7 +92,7 @@ export const sendMessage = async (
       senderId,
       receiverId,
       content ?? '',
-      imageUrl ?? ''
+      imageUrl ?? '',
     );
 
 
@@ -119,5 +120,34 @@ export const sendMessage = async (
       message: 'An error occurred',
       error: error.message,
     });
+  }
+};
+
+
+// API 4: Xóa tất cả tin nhắn giữa người dùng và người nhận
+export const deleteAllMessages = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const userId = req.user?.id; // Lấy userId từ token
+    const receiverId = req.params.receiverId;
+
+    if (!userId || !receiverId) {
+      return res
+        .status(400)
+        .json({ message: 'User ID and Receiver ID are required' });
+    }
+
+    // Gọi service để xóa tất cả tin nhắn giữa hai người dùng
+    const result = await deleteAllMessagesService(userId, receiverId);
+
+    return res.status(200).json({
+      success: true,
+      message: `Deleted all messages between user ${userId} and ${receiverId}`,
+      result,
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

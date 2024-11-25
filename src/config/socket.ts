@@ -1,8 +1,6 @@
 import { Server, Socket } from "socket.io";
 import http from "http";
 import express from "express";
-import { authenticateSocket } from "../middleware/socketAuthMiddleware";
-import { sendMessage } from '../services/chat.service'
 
 
 interface UserSocketMap {
@@ -31,8 +29,6 @@ io.on("connection", (socket: Socket) => {
     console.log("A user connected", socket.id);
 
     socket.emit('connectSuccess', { message: 'You are connected!' });
-
-
 
     const userId = socket.handshake.query.userId as string | undefined;
 
