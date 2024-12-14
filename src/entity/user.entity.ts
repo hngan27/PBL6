@@ -58,6 +58,9 @@ export class User {
   @OneToMany(() => Message, message => message.receiver)
   receivedMessages: Message[];
 
-  @OneToMany(() => Notification, notification => notification.user)
-  notifications: Notification[];
+  @OneToMany(() => Notification, notification => notification.receiver)
+  notificationsReceived: Notification[]; // Các thông báo nhận được
+
+  @OneToMany(() => Notification, notification => notification.sender)
+  notificationsSent: Notification[]; // Các thông báo đã gửi
 }

@@ -1,8 +1,11 @@
 import { AppDataSource } from '../config/data-source';
 import { Friend } from '../entity/friend.entity';
 import { User } from '../entity/user.entity';
+import { Notification } from '../entity/notification.entity';
+import { NotificationType } from '../enums/notifi.enum';
 
 const friendRepository = AppDataSource.getRepository(Friend);
+const notificationRepository = AppDataSource.getRepository(Notification);
 
 export const sendFriendRequest = async (userId: string, friendId: string) => {
   // Kiểm tra xem yêu cầu đã tồn tại chưa
@@ -20,11 +23,34 @@ export const sendFriendRequest = async (userId: string, friendId: string) => {
   friendRequest.status = 'pending';
 
   await friendRepository.save(friendRequest);
+
+  // // Lấy thông tin người gửi để tạo nội dung thông báo
+  // const sender = await AppDataSource.getRepository(User).findOne({
+  //   where: { id: userId },
+  //   select: ['full_name'], // Chỉ lấy trường full_name
+  // });
+
+  // if (!sender) {
+  //   throw new Error('Sender not found');
+  // }
+
+  // Tạo thông báo cho người nhận
+  const notification = new Notification();
+  notification.receiver = { id: friendId } as User; // Người nhận yêu cầu
+  notification.sender = { id: userId } as User; // Người gửi yêu cầu
+  notification.type = NotificationType.FRIEND_REQUEST;
+  notification.content = `đã gửi cho bạn một lời mời kết bạn.`;
+  notification.is_read = false;
+
+  await notificationRepository.save(notification);
   return friendRequest;
 };
 
 export const acceptFriendRequest = async (requestId: string) => {
-  const friendRequest = await friendRepository.findOneBy({ id: requestId });
+  const friendRequest = await friendRepository.findOne({
+    where: { id: requestId },
+    relations: ['user', 'friend'], // Đảm bảo có quan hệ với user và friend
+  });
 
   if (!friendRequest) {
     throw new Error('Friend request not found');
@@ -34,6 +60,18 @@ export const acceptFriendRequest = async (requestId: string) => {
   friendRequest.accepted_at = new Date();
 
   await friendRepository.save(friendRequest);
+
+  // Tạo thông báo cho người gửi yêu cầu (người được chấp nhận)
+  const notification = new Notification();
+  notification.receiver = { id: friendRequest.user.id } as User; // Người nhận yêu cầu (người được chấp nhận)
+  notification.sender = { id: friendRequest.friend.id } as User; // Người gửi yêu cầu (người đã chấp nhận)
+  notification.type = NotificationType.FRIEND_REQUEST_ACCEPTED; // Sử dụng enum
+  notification.content = `đã chấp nhận lời mời kết bạn của bạn.`;
+  notification.is_read = false;
+
+  // Lưu thông báo vào cơ sở dữ liệu
+  await notificationRepository.save(notification);
+
   return friendRequest;
 };
 
@@ -42,14 +80,16 @@ export const getFriendsList = async (userId: string) => {
     .createQueryBuilder('friend')
     .leftJoinAndSelect('friend.user', 'user') // Join với bảng user của người dùng
     .leftJoinAndSelect('friend.friend', 'friendUser') // Join với bảng user của bạn bè
-    .where('(friend.user.id = :userId OR friend.friend.id = :userId)', { userId })
+    .where('(friend.user.id = :userId OR friend.friend.id = :userId)', {
+      userId,
+    })
     .andWhere('friend.status = :accepted', { accepted: 'accepted' })
     .getMany();
 
   const result = friends.map(friend => {
     // Kiểm tra nếu người dùng là người yêu cầu kết bạn (user) hay là người bạn (friend)
     const friendData = friend.user.id === userId ? friend.friend : friend.user;
-    
+
     return {
       id: friendData.id,
       full_name: friendData.full_name,

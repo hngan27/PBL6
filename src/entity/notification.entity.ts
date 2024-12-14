@@ -1,26 +1,33 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { User } from './user.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+} from 'typeorm';
+import { User } from '../entity/user.entity';
+import { NotificationType } from '../enums/notifi.enum';
 
 @Entity()
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
-  notification_id: string;
+  id: string;
 
-  @ManyToOne(() => User, user => user.notifications)
-  user: User;
+  @ManyToOne(() => User, user => user.notificationsReceived)
+  receiver: User; // Người nhận thông báo
 
-  @Column({
-    type: 'enum',
-    enum: ['like', 'comment', 'friend_request', 'message'],
-  })
-  type: 'like' | 'comment' | 'friend_request' | 'message';
+  @ManyToOne(() => User, user => user.notificationsSent, { nullable: true })
+  sender: User; // Người gửi thông báo
 
-  @Column({ type: 'uuid' })
-  reference_id: string;
+  @Column({ type: 'enum', enum: NotificationType })
+  type: NotificationType;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
+  @Column()
+  content: string; // Nội dung thông báo
 
   @Column({ default: false })
-  is_read: boolean;
+  is_read: boolean; // Trạng thái đã đọc
+
+  @CreateDateColumn()
+  created_at: Date; // Ngày tạo thông báo
 }
