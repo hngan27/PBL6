@@ -7,6 +7,7 @@ import postRoute from './post.route';
 import userRoute from './user.route';
 import chatRoute from './chat.route';
 import feedRoute from './feed.route';
+import notificationRoute from './notifi.route';
 
 const routerAPI: Router = Router();
 
@@ -18,5 +19,6 @@ routerAPI.use('/', postRoute);
 routerAPI.use('/', userRoute);
 routerAPI.use('/chat', chatRoute);
 routerAPI.use('/', feedRoute);
+routerAPI.use('/notification', notificationRoute);
 
 export default routerAPI;

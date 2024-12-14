@@ -3,6 +3,8 @@ import { Comment } from '../entity/comment.entity';
 import { Post } from '../entity/post.entity';
 import { User } from '../entity/user.entity';
 import { IsNull } from 'typeorm';
+import { Notification } from '../entity/notification.entity';
+import { NotificationType } from '../enums/notifi.enum';
 
 export const addComment = async (
   postId: string,
@@ -14,8 +16,12 @@ export const addComment = async (
   const commentRepository = AppDataSource.getRepository(Comment);
   const postRepository = AppDataSource.getRepository(Post);
   const userRepository = AppDataSource.getRepository(User);
+  const notificationRepository = AppDataSource.getRepository(Notification);
 
-  const post = await postRepository.findOneBy({ post_id: postId });
+  const post = await postRepository.findOne({
+    where: { post_id: postId },
+    relations: ['user'], // Lấy thông tin người sở hữu bài viết
+  });
   const user = await userRepository.findOneBy({ id: userId });
 
   if (!post || !user) {
@@ -29,16 +35,65 @@ export const addComment = async (
   comment.image_url = image_url !== null ? image_url : null;
 
   if (parentCommentId) {
-    // Tìm bình luận cha nếu có parentCommentId
-    const parentComment = await commentRepository.findOneBy({
-      comment_id: parentCommentId,
+    // Tìm bình luận cha
+    const parentComment = await commentRepository.findOne({
+      where: { comment_id: parentCommentId },
+      relations: ['user', 'replies', 'replies.user'], // Lấy thông tin người sở hữu và các phản hồi
     });
+
     if (!parentComment) {
       throw new Error('Parent comment not found');
     }
+
     comment.parent_comment = parentComment;
+
+    // Tạo thông báo cho người sở hữu bình luận cha
+    if (parentComment.user.id !== userId) {
+      const replyNotification = new Notification();
+      replyNotification.receiver = parentComment.user; // Người sở hữu bình luận cha
+      replyNotification.sender = user; // Người trả lời
+      replyNotification.type = NotificationType.COMMENT_REPLIED;
+      replyNotification.content = `đã trả lời bình luận của bạn.`;
+      replyNotification.is_read = false;
+
+      await notificationRepository.save(replyNotification);
+    }
+
+    // Gửi thông báo cho những người khác đã trả lời bình luận này
+    const otherRepliers = parentComment.replies
+      .filter((reply) => reply.user.id !== userId) // Loại trừ người vừa trả lời
+      .map((reply) => reply.user);
+
+    const notifiedUsers = new Set(); // Tránh thông báo trùng lặp
+
+    for (const replier of otherRepliers) {
+      if (!notifiedUsers.has(replier.id)) {
+        notifiedUsers.add(replier.id);
+
+        const alsoReplyNotification = new Notification();
+        alsoReplyNotification.receiver = replier; // Người dùng đã trả lời trước đó
+        alsoReplyNotification.sender = user; // Người vừa trả lời
+        alsoReplyNotification.type = NotificationType.COMMENT_REPLIED;
+        alsoReplyNotification.content = `cũng đã trả lời về bình luận mà bạn đã tham gia.`;
+        alsoReplyNotification.is_read = false;
+
+        await notificationRepository.save(alsoReplyNotification);
+      }
+    }
   } else {
     comment.parent_comment = null;
+
+    // Tạo thông báo bình luận bài viết
+    if (post.user.id !== userId) {
+      const commentNotification = new Notification();
+      commentNotification.receiver = post.user; // Người sở hữu bài viết
+      commentNotification.sender = user; // Người bình luận
+      commentNotification.type = NotificationType.POST_COMMENTED;
+      commentNotification.content = `đã bình luận bài viết của bạn.`;
+      commentNotification.is_read = false;
+
+      await notificationRepository.save(commentNotification);
+    }
   }
 
   await commentRepository.save(comment);
