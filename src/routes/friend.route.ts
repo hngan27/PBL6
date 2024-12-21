@@ -11,7 +11,7 @@ router.post(
   authenticateToken,
   friendController.acceptRequest
 ); // Chấp nhận yêu cầu kết bạn
-router.get('/list', authenticateToken, friendController.listFriends); // Danh sách bạn bè
+router.get('/list/:userId', authenticateToken, friendController.listFriends); // Danh sách bạn bè
 router.post(
   '/reject/:requestId',
   authenticateToken,
