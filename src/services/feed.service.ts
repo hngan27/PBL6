@@ -60,7 +60,14 @@ export const getUserFeed = async (userId: string) => {
   // Kết hợp các bài viết của người dùng và bạn bè
   const allPosts = [...userPosts, ...friendPosts];
 
-  const formattedPosts = allPosts.map(post => ({
+  // Sắp xếp tất cả các bài viết theo thời gian tạo giảm dần
+  const sortedPosts = allPosts.sort((a, b) => {
+    const aCreatedAt = new Date(a.created_at).getTime();
+    const bCreatedAt = new Date(b.created_at).getTime();
+    return bCreatedAt - aCreatedAt;
+  });
+
+  const formattedPosts = sortedPosts.map(post => ({
     post_id: post.post_id,
     content: post.content,
     access_modifier: post.access_modifier,
