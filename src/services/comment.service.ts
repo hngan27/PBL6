@@ -103,11 +103,36 @@ export const addComment = async (
 
 export const getCommentsByPost = async (postId: string) => {
   const commentRepository = AppDataSource.getRepository(Comment);
-  return await commentRepository.find({
+  const comments = await commentRepository.find({
     where: { post: { post_id: postId }, parent_comment: IsNull() },
-    relations: ['replies', 'user'],
+    relations: ['replies', 'user', 'replies.user'], // Thêm 'replies.user' để lấy thông tin người dùng đã reply
     order: { created_at: 'ASC' },
   });
+
+  // Trả về các bình luận cùng với người dùng đã reply
+  return comments.map(comment => ({
+    comment_id: comment.comment_id,
+    content: comment.content,
+    image_url: comment.image_url,
+    created_at: comment.created_at,
+    user: {
+      id: comment.user.id,
+      username: comment.user.username,
+      full_name: comment.user.full_name,
+      avatar_url: comment.user.avatar_url,
+    },
+    replies: comment.replies.map(reply => ({
+      reply_id: reply.comment_id,
+      content: reply.content,
+      created_at: reply.created_at,
+      user: {
+        id: reply.user.id,
+        username: reply.user.username,
+        full_name: reply.user.full_name,
+        avatar_url: reply.user.avatar_url,
+      },
+    })),
+  }));
 };
 
 export const deleteComment = async (commentId: string) => {
