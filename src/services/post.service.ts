@@ -2,12 +2,13 @@
 import { AppDataSource } from '../config/data-source';
 import { Post } from '../entity/post.entity';
 import { User } from '../entity/user.entity';
-import { Comment } from '../entity/comment.entity';
-import { Like } from '../entity/like.entity';
+import { Friend } from '../entity/friend.entity';
 import { AccessModifier } from '../enums/accessModifier.enum';
+import { Brackets } from 'typeorm';
 
 const postRepository = AppDataSource.getRepository(Post);
 const userRepository = AppDataSource.getRepository(User);
+const friendRepository = AppDataSource.getRepository(Friend);
 
 export const getPostsByUserId = async (userId: string) => {
   const posts = await AppDataSource.getRepository(Post)
@@ -42,38 +43,41 @@ export const getPostsByUserId = async (userId: string) => {
       date_of_birth: post.user.date_of_birth,
       address: post.user.address,
     },
-    comments: post.comments?.map(comment => ({
-      comment_id: comment.comment_id,
-      content: comment.content,
-      image_url: comment.image_url,
-      created_at: comment.created_at,
-      user: {
-        id: comment.user?.id,
-        username: comment.user?.username,
-        full_name: comment.user?.full_name,
-        avatar_url: comment.user?.avatar_url,
-      },
-      replies: comment.replies?.map(reply => ({
-        comment_id: reply.comment_id,
-        content: reply.content,
-        created_at: reply.created_at,
+    comments:
+      post.comments?.map(comment => ({
+        comment_id: comment.comment_id,
+        content: comment.content,
+        image_url: comment.image_url,
+        created_at: comment.created_at,
         user: {
-          id: reply.user?.id,
-          username: reply.user?.username,
+          id: comment.user?.id,
+          username: comment.user?.username,
           full_name: comment.user?.full_name,
-          avatar_url: reply.user?.avatar_url,
+          avatar_url: comment.user?.avatar_url,
         },
-      })) || []
-    })) || [],
-    likes: post.likes?.map(like => ({
-      like_id: like.like_id,
-      user: {
-        id: like.user?.id,
-        full_name: like.user?.full_name,
-        username: like.user?.username,
-        avatar_url: like.user?.avatar_url,
-      },
-    })) || []
+        replies:
+          comment.replies?.map(reply => ({
+            comment_id: reply.comment_id,
+            content: reply.content,
+            created_at: reply.created_at,
+            user: {
+              id: reply.user?.id,
+              username: reply.user?.username,
+              full_name: comment.user?.full_name,
+              avatar_url: reply.user?.avatar_url,
+            },
+          })) || [],
+      })) || [],
+    likes:
+      post.likes?.map(like => ({
+        like_id: like.like_id,
+        user: {
+          id: like.user?.id,
+          full_name: like.user?.full_name,
+          username: like.user?.username,
+          avatar_url: like.user?.avatar_url,
+        },
+      })) || [],
   }));
 
   return { posts: formattedPosts };
@@ -133,6 +137,103 @@ export const deletePost = async (postId: string) => {
   }
 
   // Có thể thêm thông báo cho việc xóa bình luận và like liên quan
-  return { message: 'Post and related comments and likes deleted successfully' };
+  return {
+    message: 'Post and related comments and likes deleted successfully',
+  };
 };
 
+export const getPostById = async (postId: string, userId: string) => {
+  // Lấy bài viết và kiểm tra quyền truy cập
+  const post = await postRepository.findOne({
+    where: { post_id: postId },
+    relations: [
+      'comments',
+      'comments.replies',
+      'comments.user',
+      'comments.replies.user',
+      'likes',
+      'user',
+    ],
+  });
+
+  if (!post) {
+    throw new Error('Post not found');
+  }
+
+  const { access_modifier, user } = post;
+
+  // Kiểm tra quyền truy cập
+  switch (access_modifier) {
+    case 'public':
+      break;
+
+    case 'friend': {
+      const isFriend = await friendRepository.findOne({
+        where: [
+          { user: { id: user.id }, friend: { id: userId }, status: 'accepted' },
+          { user: { id: userId }, friend: { id: user.id }, status: 'accepted' },
+        ],
+      });
+      if (!isFriend) {
+        throw new Error('You do not have permission to view this post');
+      }
+      break;
+    }
+
+    case 'private':
+      if (user.id !== userId) {
+        throw new Error('You do not have permission to view this post');
+      }
+      break;
+
+    default:
+      throw new Error('Invalid access modifier');
+  }
+
+  // Xử lý dữ liệu trả về
+  const sanitizedPost = {
+    post_id: post.post_id,
+    content: post.content,
+    access_modifier: post.access_modifier,
+    like_count: post.likes.length,
+    comment_count: post.comments.length,
+    image_url: post.image_url,
+    created_at: post.created_at,
+    updated_at: post.updated_at,
+    user: {
+      id: post.user.id,
+      username: post.user.username,
+      full_name: post.user.full_name,
+      email: post.user.email,
+      avatar_url: post.user.avatar_url,
+      bio: post.user.bio,
+      date_of_birth: post.user.date_of_birth,
+      address: post.user.address,
+    },
+    comments: post.comments.map(comment => ({
+      comment_id: comment.comment_id,
+      content: comment.content,
+      image_url: comment.image_url,
+      created_at: comment.created_at,
+      user: {
+        id: comment.user.id,
+        username: comment.user.username,
+        full_name: comment.user.full_name,
+        avatar_url: comment.user.avatar_url,
+      },
+      replies: comment.replies.map(reply => ({
+        reply_id: reply.comment_id,
+        content: reply.content,
+        created_at: reply.created_at,
+        user: {
+          id: reply.user.id,
+          username: reply.user.username,
+          full_name: reply.user.full_name,
+          avatar_url: reply.user.avatar_url,
+        },
+      })),
+    })),
+  };
+
+  return sanitizedPost;
+};

@@ -5,6 +5,7 @@ import {
   createPost,
   editPost,
   removePost,
+  fetchPostByIdPost,
 } from '../controllers/post.controller';
 import { authenticateToken } from '../middleware/auth.middleware';
 import upload from '../config/multer-config';
@@ -12,6 +13,9 @@ import upload from '../config/multer-config';
 const router = express.Router();
 
 router.get('/:userId/posts', authenticateToken, getAllPostsByUserId); // Lấy bài viết của bạn bè
+
+router.get('/post/:postId', authenticateToken, fetchPostByIdPost);
+
 router.post('/posts', authenticateToken, upload.single('image'), createPost); // Tạo bài viết mới
 router.put(
   '/posts/:postId',
