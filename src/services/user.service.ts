@@ -139,6 +139,8 @@ export const getProfileWithDetails = async (
 
   // Tạo điều kiện `access_modifier` cho bài viết
   let accessModifiers: AccessModifier[] = [AccessModifier.Public];
+  let relationshipStatus = 'stranger'; // Trạng thái mặc định là stranger
+
   if (isSelf) {
     // Nếu là chính mình, lấy tất cả bài viết (bao gồm Public, Friend, Private)
     accessModifiers = [
@@ -146,6 +148,7 @@ export const getProfileWithDetails = async (
       AccessModifier.Friend,
       AccessModifier.Private,
     ];
+    relationshipStatus = 'self'; // Nếu là chính mình, trạng thái là self
   } else {
     // Kiểm tra mối quan hệ bạn bè
     const isFriend = await friendRepository.findOne({
@@ -164,8 +167,31 @@ export const getProfileWithDetails = async (
     });
 
     if (isFriend) {
-      // Nếu là bạn bè, lấy bài viết Public và Friend
-      accessModifiers.push(AccessModifier.Friend);
+      relationshipStatus = 'accepted';// Nếu là bạn bè, trạng thái là accepted
+      accessModifiers.push(AccessModifier.Friend); 
+    } else {
+      // Kiểm tra mối quan hệ pending (người dùng đã gửi lời mời kết bạn nhưng chưa được chấp nhận)
+      const isPendingByUser = await friendRepository.findOne({
+        where: {
+          user: { id: currentUserId },
+          friend: { id: targetUserId },
+          status: 'pending', // Trạng thái pending nếu bạn gửi lời mời
+        },
+      });
+
+      const isPendingByTarget = await friendRepository.findOne({
+        where: {
+          user: { id: targetUserId },
+          friend: { id: currentUserId },
+          status: 'pending', // Trạng thái pending nếu họ gửi lời mời cho bạn
+        },
+      });
+
+      if (isPendingByUser) {
+        relationshipStatus = 'pending'; // Bạn đã gửi lời mời
+      } else if (isPendingByTarget) {
+        relationshipStatus = 'pending_by_target'; // Họ đã gửi lời mời cho bạn
+      }
     }
   }
 
@@ -186,11 +212,13 @@ export const getProfileWithDetails = async (
     ],
   });
 
+  // Trả về thông tin người dùng với friendCount và relationshipStatus
   return {
     user: {
       ...targetUser,
       friendCount,
+      relationshipStatus, // Trạng thái mối quan hệ
     },
-    posts,
+    posts, // Các bài viết của người dùng
   };
 };

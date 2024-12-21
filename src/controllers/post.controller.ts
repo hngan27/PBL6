@@ -104,16 +104,12 @@ const handleError = (res: Response, error: unknown) => {
 
 export const fetchPostByIdPost = async (req: Request, res: Response) => {
   const { postId } = req.params; 
-  console.log(postId);
   const userId = req.user?.id; 
   if (!userId) {
     return res.status(401).json({ message: 'User not authenticated' });
   }
   try {
-    // Gọi service để lấy bài viết
     const post = await getPostByIdService(postId, userId);
-
-    // Trả về dữ liệu bài viết đã được xử lý
     return res.status(200).json(post);
   } catch (error) {
     console.error('Error fetching posts:', error);

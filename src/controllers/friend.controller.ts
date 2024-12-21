@@ -43,22 +43,23 @@ export const acceptRequest = async (req: Request, res: Response) => {
 };
 
 export const listFriends = async (req: Request, res: Response) => {
-  // Kiểm tra xem req.user có tồn tại không
-  const userId = req.user?.id; // Sử dụng userId từ token
+  const { userId } = req.params;
+
   if (!userId) {
-    return res.status(401).json({ message: 'Unauthorized' }); // Trả về lỗi nếu không có userId
+    return res.status(400).json({ message: 'UserId is required' });
   }
 
   try {
     const friends = await getFriendsList(userId);
     res.status(200).json(friends);
   } catch (error) {
-    res.status(400).json({
+    res.status(500).json({
       message:
         error instanceof Error ? error.message : 'An unknown error occurred',
     });
   }
 };
+
 
 export const rejectRequest = async (req: Request, res: Response) => {
   const { requestId } = req.params;
