@@ -4,14 +4,13 @@ import jwt from 'jsonwebtoken';
 import { AppDataSource } from '../config/data-source';
 import { User } from '../entity/user.entity';
 
+const userRepository = AppDataSource.getRepository(User);
 export const registerUser = async (
   username: string,
   password: string,
   fullName: string,
   email: string
 ) => {
-  const userRepository = AppDataSource.getRepository(User);
-
   // Kiểm tra xem tên người dùng hoặc email đã tồn tại chưa
   const existingUser = await userRepository.findOne({
     where: [{ username }, { email }],
@@ -36,8 +35,6 @@ export const registerUser = async (
 };
 
 export const loginUser = async (email: string, password: string) => {
-  const userRepository = AppDataSource.getRepository(User);
-
   // Tìm người dùng theo email
   const user = await userRepository.findOneBy({ email });
   if (!user) {
@@ -60,8 +57,6 @@ export const loginUser = async (email: string, password: string) => {
     expiresIn: process.env.JWT_EXPIRE,
   });
 
-
-
   return {
     token,
     user: {
@@ -72,4 +67,34 @@ export const loginUser = async (email: string, password: string) => {
       username: user.username,
     },
   };
+};
+
+export const findOrCreateUser = async (payload: {
+  email: string;
+  full_name: string;
+  googleId: string;
+  avatarUrl?: string;
+}) => {
+  const { email, full_name, googleId, avatarUrl } = payload;
+
+  // Kiểm tra tài khoản đã tồn tại
+  let user = await userRepository.findOne({ where: { email } });
+  if (!user) {
+    // Tạo mới tài khoản nếu chưa tồn tại
+    user = userRepository.create({
+      username: '',
+      full_name: full_name,
+      email,
+      avatar_url: avatarUrl || undefined,
+      password: '', // Không dùng mật khẩu cho Google login
+    });
+    await userRepository.save(user);
+  }
+
+  return user;
+};
+
+export const generateJWT = (userId: string) => {
+  const jwtSecret = process.env.JWT_SECRET as string;
+  return jwt.sign({ userId }, jwtSecret, { expiresIn: '7d' });
 };

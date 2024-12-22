@@ -38,6 +38,9 @@ export class User {
   @Column({ length: 1023, nullable: true })
   address: string;
 
+  @Column({ nullable: true })
+  googleId: string;
+
   @OneToMany(() => Post, post => post.user)
   posts: Post[];
 
