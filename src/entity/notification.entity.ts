@@ -4,8 +4,10 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  JoinColumn
 } from 'typeorm';
 import { User } from '../entity/user.entity';
+import { Post } from '../entity/post.entity';
 import { NotificationType } from '../enums/notifi.enum';
 
 @Entity()
@@ -30,4 +32,12 @@ export class Notification {
 
   @CreateDateColumn()
   created_at: Date; // Ngày tạo thông báo
+
+  @Column({ nullable: true }) 
+  post_id: string;
+
+  @ManyToOne(() => Post, { nullable: true })
+  @JoinColumn({ name: 'post_id' })
+  post: Post;
+
 }

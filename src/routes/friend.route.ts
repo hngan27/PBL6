@@ -40,4 +40,6 @@ router.get(
   friendController.getPossibleFriendsController
 ); // trả về danh sách gợi ý kết bạn
 
+router.post('/unfriend',authenticateToken, friendController.handleUnfriendRequest);
+
 export default router;

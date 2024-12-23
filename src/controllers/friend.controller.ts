@@ -7,7 +7,8 @@ import {
   getIncomingRequests,
   getOutgoingRequests,
   cancelFriendRequest,
-  findPossibleFriends
+  findPossibleFriends,
+  unfriendUser
 } from '../services/friend.service';
 
 export const requestFriend = async (req: Request, res: Response) => {
@@ -140,4 +141,15 @@ export const getPossibleFriendsController = async (req: Request, res: Response) 
   }
 
   return res.status(401).json({ message: 'Unauthorized' });
+};
+
+export const handleUnfriendRequest = async (req: Request, res: Response) => {
+  const { userId, friendId } = req.body; // Lấy userId và friendId từ yêu cầu
+
+  try {
+    const result = await unfriendUser(userId, friendId);
+    res.status(200).json(result);
+  } catch (error) {
+    return res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
+  }
 };

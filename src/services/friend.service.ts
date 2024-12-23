@@ -264,3 +264,25 @@ export const findPossibleFriends = async (currentUserId: string) => {
 
   return topPotentialFriends;
 };
+
+export const unfriendUser = async (userId: string, friendId: string) => {
+  // Tìm kết bạn giữa 2 người dùng
+  const friendRecord = await friendRepository.findOne({
+    where: [
+      { user: { id: userId }, friend: { id: friendId }, status: 'accepted' },
+      { user: { id: friendId }, friend: { id: userId }, status: 'accepted' },
+    ],
+    relations: ['user', 'friend'],
+  });
+
+  if (!friendRecord) {
+    throw new Error('Friendship not found or already deleted');
+  }
+
+  friendRecord.status = 'deleted'; 
+
+  // Cập nhật lại trạng thái kết bạn
+  await friendRepository.save(friendRecord);
+
+  return { message: 'Friendship successfully deleted' };
+};

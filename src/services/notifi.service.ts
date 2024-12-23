@@ -7,7 +7,7 @@ const notificationRepository = AppDataSource.getRepository(Notification);
 export const getNotifications = async (userId: string) => {
   return await notificationRepository.find({
     where: { receiver: { id: userId } },
-    relations: ['sender'], // Nếu cần thông tin người gửi
+    relations: ['sender'], 
     order: { created_at: 'DESC' },
   });
 };
