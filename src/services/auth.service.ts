@@ -29,6 +29,8 @@ export const registerUser = async (
   user.full_name = fullName;
   user.email = email;
 
+  user.avatar_url = 'https://hoanghamobile.com/tin-tuc/wp-content/uploads/2024/03/avatar-trang-68.jpg';
+
   // Lưu người dùng vào cơ sở dữ liệu
   await userRepository.save(user);
   return user; // hoặc trả về một thông điệp thành công
