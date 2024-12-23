@@ -55,6 +55,7 @@ export const addComment = async (
       replyNotification.type = NotificationType.COMMENT_REPLIED;
       replyNotification.content = `đã trả lời bình luận của bạn.`;
       replyNotification.is_read = false;
+      replyNotification.post = post; 
 
       await notificationRepository.save(replyNotification);
     }
@@ -76,6 +77,7 @@ export const addComment = async (
         alsoReplyNotification.type = NotificationType.COMMENT_REPLIED;
         alsoReplyNotification.content = `cũng đã trả lời về bình luận mà bạn đã tham gia.`;
         alsoReplyNotification.is_read = false;
+        alsoReplyNotification.post = post; 
 
         await notificationRepository.save(alsoReplyNotification);
       }
@@ -91,6 +93,7 @@ export const addComment = async (
       commentNotification.type = NotificationType.POST_COMMENTED;
       commentNotification.content = `đã bình luận bài viết của bạn.`;
       commentNotification.is_read = false;
+      commentNotification.post = post; 
 
       await notificationRepository.save(commentNotification);
     }

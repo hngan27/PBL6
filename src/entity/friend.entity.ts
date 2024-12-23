@@ -16,10 +16,10 @@ export class Friend {
 
   @Column({
     type: 'enum',
-    enum: ['pending', 'accepted', 'rejected'],
+    enum: ['pending', 'accepted', 'rejected', 'deleted'],
     default: 'pending',
   })
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'deleted';
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   requested_at: Date;

@@ -64,6 +64,7 @@ export const toggleLikePost = async (postId: string, userId: string) => {
       notification.type = NotificationType.POST_LIKED;
       notification.content = `đã thích bài viết của bạn.`; // Cập nhật nội dung thông báo
       notification.is_read = false;
+      notification.post = post;
 
       // Lưu thông báo vào cơ sở dữ liệu
       await notificationRepository.save(notification);
