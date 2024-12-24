@@ -162,32 +162,33 @@ export const getPostById = async (postId: string, userId: string) => {
 
   const { access_modifier, user } = post;
 
-  // Kiểm tra quyền truy cập
-  switch (access_modifier) {
-    case 'public':
-      break;
+  if (user.id !== userId) {
+    switch (access_modifier) {
+      case 'public':
+        break;
 
-    case 'friend': {
-      const isFriend = await friendRepository.findOne({
-        where: [
-          { user: { id: user.id }, friend: { id: userId }, status: 'accepted' },
-          { user: { id: userId }, friend: { id: user.id }, status: 'accepted' },
-        ],
-      });
-      if (!isFriend) {
-        throw new Error('You do not have permission to view this post');
+      case 'friend': {
+        const isFriend = await friendRepository.findOne({
+          where: [
+            { user: { id: user.id }, friend: { id: userId }, status: 'accepted' },
+            { user: { id: userId }, friend: { id: user.id }, status: 'accepted' },
+          ],
+        });
+        if (!isFriend) {
+          throw new Error('You do not have permission to view this post');
+        }
+        break;
       }
-      break;
+
+      case 'private':
+        if (user.id !== userId) {
+          throw new Error('You do not have permission to view this post');
+        }
+        break;
+
+      default:
+        throw new Error('Invalid access modifier');
     }
-
-    case 'private':
-      if (user.id !== userId) {
-        throw new Error('You do not have permission to view this post');
-      }
-      break;
-
-    default:
-      throw new Error('Invalid access modifier');
   }
 
   // Xử lý dữ liệu trả về
